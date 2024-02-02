@@ -2,34 +2,43 @@ from datetime import datetime, timedelta, date
 
 
 def get_birthdays_per_week(users):
+    birthdays_per_week = {}
     today = date.today()
-    birthdays_per_week = {day: [] for day in
-                          ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
-
     for user in users:
         name = user["name"]
         birthday = user["birthday"]
 
+        # Создаем новую дату с текущим годом и месяцем/днем из дня рождения
         birthday_this_year = datetime(today.year, birthday.month, birthday.day).date()
 
         if today > birthday_this_year:
+            # Если дата рождения уже прошла, меняем год на следующий
             birthday_next_year = datetime(today.year + 1, birthday.month, birthday.day).date()
         else:
+            # Иначе оставляем текущий год
             birthday_next_year = birthday_this_year
 
-        if today <= birthday_next_year <= today + timedelta(days=7):
-            if birthday_next_year.weekday() == 5:  # Суббота
-                birthday_next_year += timedelta(days=2)
-            elif birthday_next_year.weekday() == 6:  # Воскресенье
-                birthday_next_year += timedelta(days=1)
+        # Переносим на понедельник, если выходной - суббота или воскресенье
+        if birthday_next_year.weekday() == 5:  # 5 - суббота
+            birthday_next_year += timedelta(days=2)
+        elif birthday_next_year.weekday() == 6:  # 6 - воскресенье
+            birthday_next_year += timedelta(days=1)
 
+        # Вычисляем разницу во времени до дня рождения
+        time_left_until_bd = birthday_next_year - today
+
+        # Получаем количество дней из timedelta
+        days_left = time_left_until_bd.days
+
+        if 0 <= days_left <= 7:
             day_of_week = birthday_next_year.strftime('%A')
-            if birthday_next_year <= today + timedelta(
-                    days=7):  # Учитываем только те дни рождения, которые в пределах недели
+
+            if day_of_week not in birthdays_per_week:
+                birthdays_per_week[day_of_week] = [name.split()[0]]
+            else:
                 birthdays_per_week[day_of_week].append(name.split()[0])
 
     return birthdays_per_week
-
 
 if __name__ == "__main__":
     users = [
